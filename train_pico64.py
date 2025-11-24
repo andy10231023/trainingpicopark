@@ -22,9 +22,9 @@ from PPO import PPO, CNNPolicy, CNNValue
 # ---------------------
 # Config
 # ---------------------
-LEVELS = ["EASY", "C0", "C1", "C2", "C3"]
-FRAMESKIP = 2
-MAX_STEPS = 200
+LEVELS = ["EASY", "C0", "C1", "C2"]
+FRAMESKIP = 1
+MAX_STEPS = 300
 STEPS_PER_ITER = 16384
 EPOCHS = 10
 BATCH_SIZE = 4096
@@ -76,7 +76,7 @@ if __name__ == "__main__":
           gamma=0.99, lam=0.95,
           clip_ratio=0.2,
           pi_lr=3e-4, vf_lr=1e-3,
-          ent_coef=0.03,   # 原本 0.01 → 0.03
+          ent_coef=0.03,
           vf_coef=0.5,
           max_grad_norm=0.5)
 

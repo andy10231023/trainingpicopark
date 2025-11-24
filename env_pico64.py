@@ -92,6 +92,7 @@ class Pico64Env:
         self.agents[1].has_key = False
         self.t = 0
         self.done = False
+        self.reached_high = False
         return self._obs()
 
     def step(self, action: int):
@@ -124,6 +125,15 @@ class Pico64Env:
                 r_total += 5.0
             # small time penalty
             r_total += -0.01
+
+            agent0 = self.agents[0]
+            x = agent0.x
+            y = agent0.y
+            h = self.grid.shape[0]
+
+            if not getattr(self, "reached_high", False) and y <= (h - 7 + 0.5) and x >= 20:
+                r_total += 30.0
+                self.reached_high = True
 
             # distance shaping to key/door
             r_total += 0.02 * self._delta_goal_progress()
@@ -279,44 +289,43 @@ def make_map_cfg(level: str = "C0") -> Dict[str, Any]:
     grid[h-1, :] = SOLID
 
     if level == "C0":
-        # No buttons, simple platforms, key up-left, door right
         platforms = [
-            (h-5, 5, 15), (h-9, 20, 30), (h-13, 35, 45), (h-9, 50, 60)
+            (h-5, 4, 40)
         ]
         for y, x0, x1 in platforms:
             grid[y, x0:x1] = SOLID
         spawn1 = (6.0, h-2.0); spawn2 = (8.0, h-2.0)
-        key = (40.0, h-14.0)
-        door = (58.0, h-10.0)
+        key = (20.0, h-6.0)
+        door = (30.0, h-6.0)
+        return {'grid': grid, 'spawn1': spawn1, 'spawn2': spawn2, 'key': key, 'door': door}
 
     elif level == "C1":
         # Sparse buttons far from path
         platforms = [
-            (h-5, 5, 15), (h-9, 20, 30), (h-13, 35, 45), (h-9, 50, 60)
+            (h-5, 4, 20), (h-7, 20, 40)
         ]
         for y, x0, x1 in platforms:
             grid[y, x0:x1] = SOLID
-        # buttons
-        grid[h-2, 16] = BUTTON
-        grid[h-2, 18] = BUTTON
-        spawn1 = (6.0, h-2.0); spawn2 = (8.0, h-2.0)
-        key = (40.0, h-14.0)
-        door = (58.0, h-10.0)
+        spawn1 = (6.0, h-6.0); spawn2 = (8.0, h-6.0)
+        key = (26.0, h-8.0)
+        door = (34.0, h-8.0)
+        return {'grid': grid, 'spawn1': spawn1, 'spawn2': spawn2, 'key': key, 'door': door}
 
     elif level == "C2":
         # Corridor with button clusters
         platforms = [
-            (h-5, 4, 60), (h-9, 22, 28), (h-13, 36, 44)
+            (h-5, 4, 20), (h-7, 20, 40)
         ]
         for y, x0, x1 in platforms:
             grid[y, x0:x1] = SOLID
-        for x in range(15, 21, 2):
-            grid[h-2, x] = BUTTON
-        for x in range(46, 55, 2):
-            grid[h-2, x] = BUTTON
-        spawn1 = (6.0, h-2.0); spawn2 = (8.0, h-2.0)
-        key = (40.0, h-14.0)
-        door = (58.0, h-6.0)
+        spawn1 = (6.0, h-6.0); spawn2 = (8.0, h-6.0)
+        key = (26.0, h-8.0)
+        door = (34.0, h-8.0)
+        button_x = 24
+        button_y = h-8        # 跟高平台同一高度
+        grid[button_y, button_x] = BUTTON
+        return {'grid': grid, 'spawn1': spawn1, 'spawn2': spawn2, 'key': key, 'door': door}
+
     elif level == "EASY":
         platforms = [(h-5, 4, 40)]
         for y, x0, x1 in platforms:
@@ -325,22 +334,6 @@ def make_map_cfg(level: str = "C0") -> Dict[str, Any]:
         key    = (14.0, h-6.0)   # 很近
         door   = (22.0, h-6.0)   # 也很近
         return {'grid': grid, 'spawn1': spawn1, 'spawn2': spawn2, 'key': key, 'door': door}
-
-
-    else:  # "C3" final-ish (closest to 6-4 idea)
-        platforms = [
-            (h-5, 4, 60), (h-9, 22, 28), (h-13, 36, 44), (h-9, 50, 60)
-        ]
-        for y, x0, x1 in platforms:
-            grid[y, x0:x1] = SOLID
-        # dense button field near mid and end
-        for x in range(12, 22):
-            grid[h-2, x] = BUTTON if x % 2 == 0 else grid[h-2, x]
-        for x in range(48, 60):
-            grid[h-2, x] = BUTTON if x % 2 == 1 else grid[h-2, x]
-        spawn1 = (6.0, h-2.0); spawn2 = (8.0, h-2.0)
-        key = (40.0, h-14.0)
-        door = (58.0, h-10.0)
 
     return {
         'grid': grid,
